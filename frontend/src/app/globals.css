@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Hover behavior adapting to light/dark (only when .theme-hover is present) */
+html.dark body .theme-hover a:hover {
+  color: #e5e7eb;
+}
+
+html:not(.dark) body .theme-hover a:hover {
+  color: #111827;
+}
+
+html.dark body .theme-hover button:hover {
+  background-color: #1f2937;
+  color: #f9fafb;
+  border-color: #374151;
+}
+
+html:not(.dark) body .theme-hover button:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+  border-color: #d1d5db;
+}
