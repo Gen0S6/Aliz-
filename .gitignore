@@ -2,3 +2,6 @@
 .env.*
 backend/.env
 frontend/.env
+backend/.venv/
+frontend/.venv/
+.venv/
