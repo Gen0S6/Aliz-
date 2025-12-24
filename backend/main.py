@@ -32,14 +32,19 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 # CORS: autorise le frontend (localhost:3000) à appeler l'API (localhost:8000)
 # Autorise localhost (dev) pour le frontend
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    # Prod frontends
+    "https://alizejobfinder.com",
+    "https://www.alizejobfinder.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
