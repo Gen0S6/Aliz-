@@ -234,6 +234,14 @@ export default function DashboardPage() {
     }
   }
 
+  // Rafraîchit l'historique sans rechargement de page
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadRuns();
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   function formatDate(dateVal: string | Date) {
     if (!dateVal) return "";
     const d = dateVal instanceof Date ? dateVal : new Date(dateVal);

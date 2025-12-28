@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faA } from "@fortawesome/free-solid-svg-icons";
 import ThemeProvider, { useTheme } from "./ThemeProvider";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -64,8 +66,8 @@ function ShellFrame({ children }: { children: React.ReactNode }) {
       {!isAuthPage && (
         <header className={headerClass}>
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-            <Link href="/" className={`text-lg font-semibold ${linkClass}`}>
-              Alizè
+            <Link href="/" className={`flex items-center gap-2 text-lg font-semibold ${linkClass}`}>
+              <span>Alizè</span>
             </Link>
             <nav className={navClass}>
               {(!isHomePage || isAuthed) && (
