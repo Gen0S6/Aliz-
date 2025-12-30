@@ -66,7 +66,7 @@ async def upload_cv(
     db.refresh(cv)
     clear_all_jobs(db)
 
-    return {"id": cv.id, "filename": cv.filename, "url": storage.build_file_url(cv.filename)}
+    return {"id": cv.id, "filename": cv.filename, "url": storage.presigned_url(cv.filename)}
 
 
 @router.get("/latest", response_model=CVOut)
@@ -87,5 +87,5 @@ def latest_cv(
         filename=cv.filename,
         created_at=cv.created_at,
         text=(cv.text or "")[:2000],
-        url=storage.build_file_url(cv.filename),
+        url=storage.presigned_url(cv.filename),
     )

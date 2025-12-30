@@ -11,6 +11,7 @@ AWS_S3_REGION = os.getenv("AWS_S3_REGION", "").strip()
 AWS_S3_ENDPOINT = os.getenv("AWS_S3_ENDPOINT", "").strip()  # optional custom endpoint
 AWS_S3_BASE_URL = os.getenv("AWS_S3_BASE_URL", "").strip()  # optional public URL override
 AWS_S3_FORCE_PATH_STYLE = os.getenv("AWS_S3_FORCE_PATH_STYLE", "false").lower() == "true"
+AWS_S3_PRESIGN_TTL = int(os.getenv("AWS_S3_PRESIGN_TTL", "3600"))  # seconds; 0 to disable
 
 
 def _require_config():
@@ -45,6 +46,18 @@ def build_file_url(key: str) -> str:
         return f"https://{AWS_S3_BUCKET}.s3.{AWS_S3_REGION}.amazonaws.com/{key}"
     # Region non fournie, fallback global
     return f"https://{AWS_S3_BUCKET}.s3.amazonaws.com/{key}"
+
+
+def presigned_url(key: str) -> str:
+    """Retourne une URL signée (lecture) si activé."""
+    if AWS_S3_PRESIGN_TTL <= 0:
+        return build_file_url(key)
+    client = _client()
+    return client.generate_presigned_url(
+        ClientMethod="get_object",
+        Params={"Bucket": AWS_S3_BUCKET, "Key": key},
+        ExpiresIn=AWS_S3_PRESIGN_TTL,
+    )
 
 
 def upload_bytes(key: str, data: bytes, content_type: Optional[str] = None):
