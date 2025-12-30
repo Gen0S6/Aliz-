@@ -1,13 +1,22 @@
+import os
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import re
 
+from app.auth import get_current_user
 from app.deps import get_db
 from app.models import User
-from app.schemas import RegisterIn, LoginIn, TokenOut
+from app.schemas import RegisterIn, LoginIn, TokenOut, ProfileOut
 from app.security import hash_password, verify_password, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# Admin simple : emails séparés par des virgules dans ADMIN_EMAILS
+ADMIN_EMAILS = [
+    e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()
+]
 
 
 def _sanitize_password(pwd: str) -> str:
@@ -66,3 +75,23 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
     token = create_access_token(user.id)
 
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/users", response_model=List[ProfileOut])
+def list_users(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Liste tous les comptes ; réservé aux emails déclarés dans ADMIN_EMAILS."""
+    if not ADMIN_EMAILS or user.email.lower() not in ADMIN_EMAILS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+    users = db.query(User).order_by(User.id).all()
+    return [
+        ProfileOut(
+            id=u.id,
+            email=u.email,
+            notifications_enabled=u.notifications_enabled,
+            created_at=u.created_at,
+        )
+        for u in users
+    ]

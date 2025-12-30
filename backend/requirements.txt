@@ -11,3 +11,5 @@ openai
 pypdf
 python-multipart
 email-validator
+boto3
+psycopg2-binary

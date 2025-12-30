@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pathlib import Path
-
 from app.auth import get_current_user
 from app.deps import get_db
 from app.models import User, CV, UserPreference, JobSearchRun, UserJobNotification, JobListing, UserJobVisit, UserJobBlacklist, UserAnalysisCache
@@ -9,6 +7,7 @@ from app.schemas import ProfileOut, ProfileUpdate
 from app.security import hash_password
 from app.api.auth import _sanitize_password
 from app.services.matching import clear_all_jobs
+from app.services import storage
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -30,15 +29,9 @@ def delete_profile(
 ):
     # Supprime CVs + fichiers uploadés
     cvs = db.query(CV).filter(CV.user_id == user.id).all()
-    upload_dir = Path("uploads")
     for cv in cvs:
         if cv.filename:
-            file_path = upload_dir / cv.filename
-            try:
-                if file_path.exists():
-                    file_path.unlink()
-            except Exception:
-                pass
+            storage.delete_object(cv.filename)
         db.delete(cv)
 
     # Préférences, runs, notifications

@@ -1,6 +1,5 @@
 import io
 import time
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -11,8 +10,7 @@ from app.deps import get_db
 from app.models import CV, User
 from app.schemas import CVOut
 from app.services.matching import clear_all_jobs
-
-UPLOAD_DIR = Path("uploads")
+from app.services import storage
 
 router = APIRouter(prefix="/cv", tags=["cv"])
 
@@ -47,11 +45,11 @@ async def upload_cv(
             detail="Seuls les fichiers PDF sont acceptés pour le moment.",
         )
 
-    UPLOAD_DIR.mkdir(exist_ok=True)
     safe_name = f"user{user.id}_{int(time.time())}_{file.filename}"
-    filepath = UPLOAD_DIR / safe_name
     contents = await file.read()
-    filepath.write_bytes(contents)
+
+    # Envoi sur S3 (public-read)
+    storage.upload_bytes(safe_name, contents, content_type="application/pdf")
 
     text = extract_pdf_text(contents)
 
@@ -59,12 +57,7 @@ async def upload_cv(
     old_cvs = db.query(CV).filter(CV.user_id == user.id).all()
     for old in old_cvs:
         if old.filename:
-            try:
-                old_path = UPLOAD_DIR / old.filename
-                if old_path.exists():
-                    old_path.unlink()
-            except Exception:
-                pass
+            storage.delete_object(old.filename)
         db.delete(old)
 
     cv = CV(user_id=user.id, filename=safe_name, text=text)
@@ -73,7 +66,7 @@ async def upload_cv(
     db.refresh(cv)
     clear_all_jobs(db)
 
-    return {"id": cv.id, "filename": cv.filename, "url": f"/uploads/{cv.filename}"}
+    return {"id": cv.id, "filename": cv.filename, "url": storage.build_file_url(cv.filename)}
 
 
 @router.get("/latest", response_model=CVOut)
@@ -94,5 +87,5 @@ def latest_cv(
         filename=cv.filename,
         created_at=cv.created_at,
         text=(cv.text or "")[:2000],
-        url=f"/uploads/{cv.filename}",
+        url=storage.build_file_url(cv.filename),
     )
