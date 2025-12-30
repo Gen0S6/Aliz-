@@ -171,9 +171,10 @@ export default function CVPage() {
           {latest && (
             <a
               className={isDark ? "text-sm underline text-blue-300 hover:text-blue-200" : "text-sm underline text-blue-700 hover:text-blue-900"}
-              href={process.env.NEXT_PUBLIC_API_BASE
-                ? `${process.env.NEXT_PUBLIC_API_BASE}${latest.url}`
-                : `http://localhost:8000${latest.url}`
+              href={
+                latest.url.startsWith("http")
+                  ? latest.url
+                  : (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000") + latest.url
               }
               target="_blank"
               rel="noreferrer"
@@ -201,10 +202,11 @@ export default function CVPage() {
             </p>
             <div className="mt-3 flex justify-center">
               {(() => {
-                const base =
-                  process.env.NEXT_PUBLIC_API_BASE ??
-                  "http://localhost:8000";
-                const pdfUrl = `${base}${latest.url}#toolbar=0&navpanes=0&scrollbar=0`;
+                const pdfBase =
+                  latest.url.startsWith("http")
+                    ? latest.url
+                    : (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000") + latest.url;
+                const pdfUrl = `${pdfBase}#toolbar=0&navpanes=0&scrollbar=0`;
                 return (
                   <object
                     data={pdfUrl}
